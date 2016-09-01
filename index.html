@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+	<head>
+		<title>PRESUPPER</title>
+		<!-- this is chicken-scratched code. tossed together with no care for quality -->
+		<style>
+			body {
+				text-align: center;
+			}
+			@supports( filter: blur(10px) ) {
+				body::after {
+					content: "";
+					z-index: -1;
+					opacity: .25;
+					position: fixed;
+					filter: blur(10px);
+					background-size: contain;
+					background-repeat: no-repeat;
+					background-position: center center;
+					background-image: url("_black.png");
+					top: 0; left: 0; right: 0; bottom: 0;
+				}
+			}
+			canvas { display: none }
+			.container {
+				width: 400px;
+				height: 400px;
+				overflow: hidden;
+				position: relative;
+				margin: auto auto;
+				background: #000;
+				box-shadow: 0 .5em 2em rgba(0,0,0,.75);
+			}
+				.container::after {
+					content: "";
+					opacity: .80;
+					position: absolute;
+					background: url("_white.png");
+					background-size: contain;
+					top: 0; left: 0; right: 0; bottom: 0;
+				}
+				.container video {
+					max-height: 100%;
+					position: absolute;
+					left: 50%; transform: translateX(-50%);
+				}
+			img {
+				width: 250px;
+				margin: 1em;
+				display: inline-block;
+			}
+		</style>
+		<script>
+			var overlay = document.createElement( "img" );
+			overlay.src = "_white.png";
+			document.addEventListener( "DOMContentLoaded", function () {
+				let video = document.querySelector( "video" );
+				let canvas = document.querySelector( "canvas" );
+				let context = canvas.getContext( "2d" );
+				let constraints = { video: { facingMode: "user", width: 500, height: 500 }, audio: false };
+
+				let handle = function ( stream ) {
+					video.src = URL.createObjectURL(stream);
+					video.play();
+				};
+
+				let error = function ( error ) {
+					throw error;
+				};
+
+				if ( navigator.getUserMedia ) {
+					navigator.getUserMedia( constraints, handle, error );
+				} else if ( navigator.MediaDevices ) {
+					navigator.MediaDevices.getUserMedia( constraints ).then( handle ).catch( error );
+				}
+
+				canvas.width = 400;
+				canvas.height = 400;
+
+				document.querySelector( "button" ).addEventListener( "click", function () {
+					context.globalAlpha = 1;
+					context.drawImage( video, -66.5, 0, 533, 400 );
+					context.globalAlpha = .75;
+					context.drawImage( overlay, 0, 0, 400, 400 );
+					document.body.appendChild(
+						document.createElement( "img" )
+					).src = canvas.toDataURL("image/png");
+				});
+
+				document.querySelector( "button + button" ).addEventListener( "click", function () {
+					var self = this;
+					this.disabled = true;
+					setTimeout(function () {
+						document.querySelector( "button" ).click();
+						self.disabled = false;
+					}, 3000);
+				});
+
+			});
+		</script>
+	</head>
+	<body>
+		<canvas></canvas>
+		<button>Draw</button>
+		<button>3sec</button>
+		<div class="container">
+			<video></video>
+		</div>
+	</body>
+</html>
